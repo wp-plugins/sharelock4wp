@@ -1,0 +1,17 @@
+.sharelk-thumbnail {
+    float: left;
+    width: auto;
+}
+.sharelk-thumbnail img{
+    width: 50px;
+    height: 50px;
+    margin: 2px;
+}
+.sharelk-title {
+    background-color: black;
+    padding: 5px 5px 0;     
+}
+.sharelk-recent {
+    padding:5px;
+    font-weight: bold;
+}
