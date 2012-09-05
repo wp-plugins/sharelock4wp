@@ -3,7 +3,7 @@ Authors: Antronin
 Tags: sharelock, photo, blog
 Requires at least: 3.0
 Tested up to: 3.4
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 or later
 
 Sharelock4Wp widget shows the recent posts on Sharelock.io

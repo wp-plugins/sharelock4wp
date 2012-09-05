@@ -50,24 +50,49 @@ class Sharelk4Wp extends WP_Widget{
         $instance = wp_parse_args(
             (array)$instance,
             array(
-                'username' => null,
+                'entryname' => null,
                 'number' => 9
             )
         );
-        $username = strip_tags( stripslashes( $instance[ 'username' ] ) );
+        $entryname = strip_tags( stripslashes( $instance[ 'entryname' ] ) );
         $number = strip_tags( stripslashes( $instance[ 'number' ] ) );
         ?>
         <p>
-        <label for="<?php echo $this->get_field_id( 'username' ); ?>"><?php _e( 'Username:', $this->_widgetId ); ?></label> 
-        <select class="widefat" id="<?php echo $this->get_field_id( 'username' ); ?>" name="<?php echo $this->get_field_name( 'username' ); ?>"  value="<?php echo esc_attr( $username ); ?>">
+        <label for="<?php echo $this->get_field_id( 'entryname' ); ?>"><?php _e( 'Entry name:', $this->_widgetId ); ?></label> 
+        <select class="widefat" id="<?php echo $this->get_field_id( 'entryname' ); ?>" name="<?php echo $this->get_field_name( 'entryname' ); ?>"  value="<?php echo esc_attr( $entryname ); ?>">
             <option value="all"><?php _e( 'All' , $this->_widgetId)?></option>
             <optgroup label="<?php _e('Users', $this->_widgetId) ?>">
             <?php
             if ($users = $this->_loadJson('users')) {
                 foreach ( $users as $user ) {
                     echo "<option value='$user->username'";
-                    if ( $username == $user->username ) echo ' selected="selected"';
-                    echo ">$user->username</option>";
+                    if ( $entryname == $user->username ) echo ' selected="selected"';
+                    $num = count($user->entries);
+                    echo ">$user->username ($num)</option>";
+                }
+            } 
+            ?></optgroup>
+            <optgroup label="<?php _e('Channels', $this->_widgetId) ?>">
+            <?php
+            if ($channels = $this->_loadJson('channels')) {
+                foreach ( $channels as $ch ) {
+                    echo "<option value='channels/$ch->id'";
+                    if ( $entryname == 'channels/'+$ch->id ) echo ' selected="selected"';
+                    if (null != $ch->description) echo " title='$grp->description'";
+                    $num = count($ch->entries);
+                    echo ">$ch->name ($num)</option>";
+                }
+            } 
+            ?></optgroup>
+            <optgroup label="<?php _e('Groups', $this->_widgetId) ?>">
+            <?php
+            if ($groups = $this->_loadJson('groups')) {
+                foreach ( $groups as $grp ) {
+                    echo "<option value='groups/$grp->name'";
+                    if ( $entryname == 'groups/'+$grp->name ) echo ' selected="selected"';
+                    if (null != $grp->description) echo " title='$grp->description'";
+                    $num = count($grp->entries);
+                    echo ">$grp->name ($num)</option>";
                 }
             } 
             ?></optgroup>
@@ -91,7 +116,11 @@ class Sharelk4Wp extends WP_Widget{
      */
     public function update( $new_instance, $old_instance ) {
         $instance = $old_instance;
-        $instance['username'] = strip_tags( stripslashes( $new_instance['username'] ) );
+        if ($instance['username']) {
+            $instance['entryname'] = $instance['username'];
+            
+        }
+        $instance['entryname'] = strip_tags( stripslashes( $new_instance['entryname'] ) );
         $instance['number'] = strip_tags( stripslashes( $new_instance['number'] ) );
         return $instance;
     }
@@ -117,16 +146,25 @@ class Sharelk4Wp extends WP_Widget{
         </div>
         <?php 
         echo $after_title;
-        if ( 'all' == $instance['username'] ) {
+        if ( 'all' == $instance['entryname'] ) {
             $entries =  $this->_loadJson( 'feed' );
         } else {
-            $respons = $this->_loadJson( $instance['username'] );
+            $respons = $this->_loadJson( $instance['entryname'] );
             $entries = $respons->entries;
         }
         if ( $entries !== null ) {
             ?><div class="sharelk-recent"><?php
-            if ( 'all' != $instance['username'] ) {
-                echo sprintf(__( '%s\'s recent photos', $this->_widgetId ), $instance['username']);
+            if ( 'all' != $instance['entryname'] ) {
+                switch (strstr($instance['entryname'],'/',true)) {
+                    case 'groups':
+                        echo sprintf(__( '%s group\'s recent photos', $this->_widgetId ), $respons->name);
+                        break;
+                    case 'channels':
+                        echo sprintf(__( '%s channel\'s recent photos', $this->_widgetId ), $respons->name);
+                        break;
+                    default:
+                        echo sprintf(__( '%s\'s recent photos', $this->_widgetId ), $instance['entryname']);
+                }
             } else {
                 echo __( 'Recent photos', $this->_widgetId );
             }
@@ -141,7 +179,7 @@ class Sharelk4Wp extends WP_Widget{
             }
         } else {
             ?><div class="sharelk-recent"><?php
-            echo sprintf(__( 'No recent photos yet', $this->_widgetId ), $instance['username']);
+            echo sprintf(__( 'No recent photos yet', $this->_widgetId ), $instance['entryname']);
             ?></div><?php
         }
         echo $after_widget;
